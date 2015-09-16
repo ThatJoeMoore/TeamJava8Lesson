@@ -100,7 +100,7 @@ public interface MyInterface {
                 <h3>2014 - Java 8</h3>
                 <ul>
                     <li>Lambda Expressions (Closures)</li>
-                    <li>Default Method Implementions</li>
+                    <li>Default Method Implementations</li>
                     <li>Optional Class</li>
                     <li>Streams API</li>
                     <li>Nashorn Javascript Engine</li>
@@ -374,7 +374,7 @@ new Thread(() -&gt; System.out.println("New is awesome")).start();
 
             <div>The body of a lambda is usually delimited with curly braces:
                 <pre><code class="java" data-trim>
-{
+() -> {
     System.out.println("Hi,");
     System.out.println("there!");
     return "Something";
@@ -385,7 +385,7 @@ new Thread(() -&gt; System.out.println("New is awesome")).start();
             <div class="fragment">
                 <p style="font-weight: bold">Shortcuts!</p>
 
-                <div class="fragment">If you only have one line, you can get rid of the curly braces and the return:
+                <div class="fragment">If you only have one statement, you can get rid of the curly braces and the return:
                     <div class="fragment">Return something: <code class="java">(Object o) -> o.toString()</code></div>
                     <div class="fragment">Void: <code class="java">(Object o) -> System.out.println(o)</code></div>
                 </div>
@@ -409,7 +409,7 @@ public static void doStuff(String input, Transformer transformer) {
     System.out.println(transformer.transform(input));
 }
                 </code></pre>
-                <pre><code class="java" data-trim>MyClass.doStuff(i -> i.toUpperCase());</code></pre>
+                <pre><code class="java" data-trim>MyClass.doStuff("Hello", i -> i.toUpperCase());</code></pre>
             </div>
         </section>
         <section>
@@ -460,7 +460,7 @@ List&lt;Foo&gt; foos = //something
 String result = foos.stream()
     .filter(f -> f.bar != null)
     .filter(f -> f.bar.baz >= 0)
-    .collect(Collectors.joinString(", "))
+    .collect(Collectors.joining(", "))
 ;
 System.out.println(result);
             </code></pre>
@@ -470,22 +470,23 @@ System.out.println(result);
             <div>Parallelized Computing made easy!
             <pre class="fragment"><code class="java" data-trim>
 List&lt;Foo&gt; foos = //something
-String result = foos.stream()
+List&lt;String&gt; result = foos.stream()
     .parallel()
-    .foreach(f -> doSomethingHard(f));
+    .map(f -> doSomethingHard(f))
+    .collect(Collectors.toList());
             </code></pre>
             </div>
             <div class="fragment">Take a list of values and make a map out of it...
             <pre><code class="java" data-trim>
 Map&lt;String, Foo&gt; = foos.stream()
-            .collect(Collectors.toMap(f -> f.type, f -> f));
+    .collect(Collectors.toMap(f -> f.type, f -> f));
             </code></pre>
             </div>
             <div class="fragment">...but only if it's not null!
             <pre><code class="java" data-trim>
 Map&lt;String, Foo&gt; = foos.stream()
-            .filter(f -> f.type != null)
-            .collect(Collectors.toMap(f -> f.type, f -> f));
+    .filter(f -> f.type != null)
+    .collect(Collectors.toMap(f -> f.type, f -> f));
             </code></pre>
             </div>
         </section>
@@ -494,14 +495,97 @@ Map&lt;String, Foo&gt; = foos.stream()
             <p>We surrender some performance (due to creating the function objects), but this code is usually much easier to read.
             We can write nice, expressive code that is easy to understand, compose, and modify.</p>
         </section>
+        <section>
+            <h2>Default Methods</h2>
+            <p>The .stream() methods are implemented as part of the Collection interface. In order to keep all existing
+            collections compatible with Java 8, Default Methods were introduced.</p>
+            <p>Now, when you add a new method to an interface, you can also add a default implementation which will
+            be used by any implementing classes that do not implement the method. This way, you can add methods to
+            interfaces without breaking any code that uses that interface.</p>
+        </section>
+        <section>
+            <h2>Default Methods</h2>
+            <pre><code class="java" data-trim>
+public interface MyInterface {
+    void myMethod();
+    default void myNewMethod() {
+        //Do something default-y
+    }
+}
 
-        <section style="text-align: left;">
-            <h1>THE END</h1>
+public class MyImpl implements MyInterface {
+    @Override
+    public void myMethod() {
+        System.out.println("My Stuff");
+    }
+}
+            </code></pre>
+        </section>
+        <section>
+            <h2>Default Methods</h2>
+            <p>There are some interesting rules about how these method work and interact with each other, but most
+            of the time, you don't need to worry about it. Most of the time, none of us will need to write these,
+            but you should know what it means when you see it.</p>
+        </section>
+        <section>
+            <h2>Optional</h2>
+            <p>The Optional class helps get rid of the use of null. The idea is that if a method declares a normal
+            return type, it should never be null. If it returns Optional&lt;Something&gt;, it might not return a value.</p>
+            <p>Optional is either full or empty, and implements a lot of functional-style methods, like map and flatMap.</p>
+            <p>You get optionals using <code>Optional.empty()</code> or <code>Optional.of(something)</code>.</p>
+            <p>Optional is a pattern known as a <b>Monad</b>, which is widely used in newer languages instead of null.</p>
+        </section>
+        <section>
+            <h2>Optional</h2>
+            <p>The big win of Optional is being able to explicitly say what can be null and what can't be: in fields,
+            method parameters, return values, etc. and easily handle the cases where you don't have a value.</p>
+            <pre><code class="java" data-trim>
+public class Foo {
+    public Optional&lt;Bar&gt; bar;
+    public static class Bar {
+        Optional&lt;String&gt; baz;
+    }
+}
+&bullet; &bullet; &bullet;
+Foo foo = new Foo();
+foo.bar.flatMap(b -> baz).getOrElse("nothing");
+            </code></pre>
+        </section>
+        <section>
+            <h2>Nashorn/Javascript</h2>
+            <p>Java has had support for executing JavaScript for some time, but it's always been slow and clunky.</p>
+            <p>The old engine was called Rhino, the new engine is called Nashorn, and comes with an easier API for
+            running scripting languages inside of Java. The only provided scripting engine is Nashorn, but anyone can
+            write one for any language they want.</p>
+            <p>This opens up all kinds of interesting options.</p>
+        </section>
+        <section>
+            <h2>Date/Time</h2>
+            <p>Let's face it: java.util.Date sucks. It doesn't do much, most of its methods have been deprecated, and the
+            replacement (java.util.Calendar) sucks even more.</p>
+            <p>It's problem was taking a simple API, then realizing that it didn't work for a lot of edge cases (non-Gregorian
+            calendar systems, for example).</p>
+            <p>Java 8 introduces java.time, which has lots of nice classes for working with dates.</p>
+            <p>It manages to make the 90% of cases work well and easily while still accounting for those few who deal
+            with different date systems in a simple way.</p>
+        </section>
+        <section>
+            <h2>Date/Time</h2>
+            <div>Some of the new classes (in java.time):</div>
+            <ul>
+                <li>Clock: gets the current time in a number of formats.</li>
+                <li>Duration: a length of time, like '42 seconds.'</li>
+                <li>Period: a period of days, like '1 year, 1 month, and 12 days.'</li>
+                <li>Instant: a highly-precise instant in time.</li>
+                <li>LocalDateTime: a date/time pair without a time zone</li>
+                <li>LocalDate: a date with no time or time zone.</li>
+                <li>And more!</li>
+            </ul>
+            <p>You can even use it in Java 7 with <a href="http://www.threeten.org/">threeten.org</a>!</p>
+        </section>
 
-            <p>
-                - <a href="http://slides.com">Try the online editor</a> <br>
-                - <a href="https://github.com/hakimel/reveal.js">Source code &amp; documentation</a>
-            </p>
+        <section>
+            <h1>GO FORTH AND CODE</h1>
         </section>
     </div>
 
