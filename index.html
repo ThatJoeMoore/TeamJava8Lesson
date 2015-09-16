@@ -54,7 +54,7 @@
             <section>
                 <h3>1996 - JDK 1.0</h3>
 
-                <p class="fragment">NOT the Java we know and love-hate.</p>
+                <p class="fragment">NOT the Java we know and lovehate.</p>
             </section>
             <section>
                 <h3>2004 - J2SE 5.0</h3>
@@ -65,6 +65,7 @@
                     <li>Enums</li>
                     <li>Varargs</li>
                     <li>foreach loop: for (String each : strings)</li>
+                    <li><b>Collections!</b></li>
                 </ul>
             </section>
             <section>
@@ -102,7 +103,7 @@ public interface MyInterface {
                     <li>Default Method Implementions</li>
                     <li>Optional Class</li>
                     <li>Streams API</li>
-                    <li>Nashorn</li>
+                    <li>Nashorn Javascript Engine</li>
                     <li>New Date and Time API</li>
                 </ul>
             </section>
@@ -279,6 +280,7 @@ try (
 }
             </code></pre>
                 <p class="fragment">But what about runtime exceptions we don't know about?</p>
+
                 <div class="fragment overlay fade-in" style="background: none;">
                     <img data-src="http://www.reactiongifs.com/r/npln.gif" style="width: 50%"/>
                 </div>
@@ -300,6 +302,7 @@ try (
         </section>
         <section>
             <h2>Diamond Operator (&lt;&gt;)</h2>
+
             <p>Simplifies creating generic objects</p>
             <pre><code class="java" data-trim>
 //Old, verbose way
@@ -311,13 +314,185 @@ Map&lt;String, String&gt; java7 = new HashMap&lt;&gt;();
 
         <section data-background="http://www.reactiongifs.com/r/prtytm.gif">
             <h3>Enough with Java 7</h3>
+
             <h1>Onward to Java 8!</h1>
         </section>
 
         <section>
             <h2>Streams</h2>
+
             <p>Most of the big changes in Java 8 exist to make one thing possible: the Streams API</p>
+
             <p>We're going to talk about Lambdas first, though.</p>
+            <iframe src="//giphy.com/embed/VVf6k5bnjW84E" width="480" height="269" frameBorder="0"
+                    class="giphy-embed fragment" allowFullScreen></iframe>
+        </section>
+
+        <section>
+            <h2>Lambda Expressions</h2>
+
+            <p>Lambda expressions are also known as function literals. They are a way to pass references to a chunk of
+                code.</p>
+
+            <p>Running something on a new thread:</p>
+            <pre><code class="java" data-trim>
+//Old:
+new Thread(new Runnable() {
+    public void run() {
+        System.out.println("Running old-school");
+    }
+}).start();
+
+//New:
+new Thread(() -&gt; System.out.println("New is awesome")).start();
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Structure of a Lambda</h2>
+
+            <p>Lambdas have two parts, joined by `-&gt;`: The argument list and the body.</p>
+
+            <div class="fragment">The most verbose argument list looks like this:
+                <div><code>(String str, int i) -&gt;</code></div>
+            </div>
+            <div class="fragment">
+                <p>However, the compiler gives us some shortcuts:</p>
+
+                <div class="fragment">
+                    The compiler can guess the types of the variables based on context:
+                    <div><code>(str, i) -&gt;</code></div>
+                </div>
+                <div class="fragment">
+                    If you only have one argument, you can leave off the parens:
+                    <div><code>str -&gt;</code></div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <h3>Structure of a Lambda 2: Structure Harder!</h3>
+
+            <div>The body of a lambda is usually delimited with curly braces:
+                <pre><code class="java" data-trim>
+{
+    System.out.println("Hi,");
+    System.out.println("there!");
+    return "Something";
+}
+                </code></pre>
+                <div class="fragment">Gee, that looks a lot like any control structure!</div>
+            </div>
+            <div class="fragment">
+                <p style="font-weight: bold">Shortcuts!</p>
+
+                <div class="fragment">If you only have one line, you can get rid of the curly braces and the return:
+                    <div class="fragment">Return something: <code class="java">(Object o) -> o.toString()</code></div>
+                    <div class="fragment">Void: <code class="java">(Object o) -> System.out.println(o)</code></div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <h2>Those are cool! where can I use them?</h2>
+
+            <h3>Functional Interfaces</h3>
+
+            <div>
+                Functional interfaces are interfaces which have only one method, like this:
+                <pre><code class="java" data-trim>
+public interface Transformer {
+    public String transform(String input);
+}
+                </code></pre>
+                If a method accepts a functional interface, you can replace it with a lambda expression:
+                <pre><code class="java" data-trim>
+public static void doStuff(String input, Transformer transformer) {
+    System.out.println(transformer.transform(input));
+}
+                </code></pre>
+                <pre><code class="java" data-trim>MyClass.doStuff(i -> i.toUpperCase());</code></pre>
+            </div>
+        </section>
+        <section>
+            <h2>Method References</h2>
+
+            <p>Method references make simple Lambdas simpler. If all you do is invoke a certain method, you can just
+                reference it
+                with <code>::</code>.</p>
+
+            <p class="fragment">
+                <pre><code class="java" data-trim>
+doSomething(p -> System.out.println(p));
+//Equivalent
+doSomething(System.out::println);
+        </code></pre>
+            </p>
+            <div class="fragment">
+            You can also reference static methods:
+                <pre><code class="java" data-trim>
+doSomething(MyClass::myStaticMethod);
+        </code></pre>
+            </div>
+        </section>
+        <section>
+            <h2>The main event!</h2>
+            <p>Streams are cool. They are mostly used with the Collections API to do what we used to do with big, complicated loops.</p>
+            <pre><code class="java" data-trim>
+List&lt;Foo&gt; foos = //something
+StringBuilder output = new StringBuilder();
+boolean first = true;
+for (Foo each : foos) {
+    if (each.bar == null) {
+        continue;
+    }
+    if (each.bar.baz < 0) {
+        continue;
+    }
+    if (!first) {
+        sb.append(", ");
+    }
+    first = false;
+    sb.append(Integer.toHexString(each.bar.baz));
+}
+System.out.println(sb.toString());
+            </code></pre>
+            <pre class="fragment"><code class="java" data-trim>
+List&lt;Foo&gt; foos = //something
+String result = foos.stream()
+    .filter(f -> f.bar != null)
+    .filter(f -> f.bar.baz >= 0)
+    .collect(Collectors.joinString(", "))
+;
+System.out.println(result);
+            </code></pre>
+        </section>
+        <section>
+            <h2>Cool Examples</h2>
+            <div>Parallelized Computing made easy!
+            <pre class="fragment"><code class="java" data-trim>
+List&lt;Foo&gt; foos = //something
+String result = foos.stream()
+    .parallel()
+    .foreach(f -> doSomethingHard(f));
+            </code></pre>
+            </div>
+            <div class="fragment">Take a list of values and make a map out of it...
+            <pre><code class="java" data-trim>
+Map&lt;String, Foo&gt; = foos.stream()
+            .collect(Collectors.toMap(f -> f.type, f -> f));
+            </code></pre>
+            </div>
+            <div class="fragment">...but only if it's not null!
+            <pre><code class="java" data-trim>
+Map&lt;String, Foo&gt; = foos.stream()
+            .filter(f -> f.type != null)
+            .collect(Collectors.toMap(f -> f.type, f -> f));
+            </code></pre>
+            </div>
+        </section>
+        <section>
+            <h2>Why?</h2>
+            <p>We surrender some performance (due to creating the function objects), but this code is usually much easier to read.
+            We can write nice, expressive code that is easy to understand, compose, and modify.</p>
         </section>
 
         <section style="text-align: left;">
